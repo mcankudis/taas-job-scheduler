@@ -1,0 +1,142 @@
+[
+    {
+        "name": "Job 01",
+        "requestedNodes": 3,
+        "expectedStartTick": 60,
+        "executionWindowDeviationTicks": 15,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 02",
+        "requestedNodes": 3,
+        "expectedStartTick": 60,
+        "executionWindowDeviationTicks": 15,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 03",
+        "requestedNodes": 3,
+        "expectedStartTick": 60,
+        "executionWindowDeviationTicks": 30,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 04",
+        "requestedNodes": 5,
+        "expectedStartTick": 60,
+        "executionWindowDeviationTicks": 15,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 05",
+        "requestedNodes": 5,
+        "expectedStartTick": 60,
+        "executionWindowDeviationTicks": 30,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 06",
+        "requestedNodes": 5,
+        "expectedStartTick": 60,
+        "executionWindowDeviationTicks": 15,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 07",
+        "requestedNodes": 10,
+        "expectedStartTick": 60,
+        "executionWindowDeviationTicks": 15,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 08",
+        "requestedNodes": 10,
+        "expectedStartTick": 60,
+        "executionWindowDeviationTicks": 30,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 09",
+        "requestedNodes": 10,
+        "expectedStartTick": 60,
+        "executionWindowDeviationTicks": 15,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 10",
+        "requestedNodes": 20,
+        "expectedStartTick": 60,
+        "executionWindowDeviationTicks": 15,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 11",
+        "requestedNodes": 15,
+        "expectedStartTick": 120,
+        "executionWindowDeviationTicks": 30,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 12",
+        "requestedNodes": 15,
+        "expectedStartTick": 120,
+        "executionWindowDeviationTicks": 20,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 13",
+        "requestedNodes": 15,
+        "expectedStartTick": 120,
+        "executionWindowDeviationTicks": 15,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 14",
+        "requestedNodes": 15,
+        "expectedStartTick": 120,
+        "executionWindowDeviationTicks": 15,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 15",
+        "requestedNodes": 25,
+        "expectedStartTick": 120,
+        "executionWindowDeviationTicks": 15,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 16",
+        "requestedNodes": 25,
+        "expectedStartTick": 120,
+        "executionWindowDeviationTicks": 15,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 17",
+        "requestedNodes": 25,
+        "expectedStartTick": 120,
+        "executionWindowDeviationTicks": 15,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 18",
+        "requestedNodes": 15,
+        "expectedStartTick": 120,
+        "executionWindowDeviationTicks": 15,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 19",
+        "requestedNodes": 15,
+        "expectedStartTick": 120,
+        "executionWindowDeviationTicks": 15,
+        "executionTimeLimitInTicks": 30
+    },
+    {
+        "name": "Job 20",
+        "requestedNodes": 50,
+        "expectedStartTick": 120,
+        "executionWindowDeviationTicks": 15,
+        "executionTimeLimitInTicks": 30
+    }
+]

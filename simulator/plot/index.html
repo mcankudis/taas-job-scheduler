@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Scheduling - Reporting</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+        </style>
+    </head>
+    <body>
+        <h1 id="title">Scheduling summaries</h1>
+        <main style="margin: 20px 20px 20px 0; overflow: auto">
+            <div id="load"></div>
+            <div id="jobs"></div>
+        </main>
+        <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+        <script type="module" src="./load-plot.js"></script>
+        <script type="module" src="./jobs-plot.js"></script>
+        <script>
+            const f = async () => {
+                try {
+                    const index = await fetch('/plot/data/index.txt');
+                    const text = await index.text();
+                    const lines = text.split('\n');
+                    for (const line of lines) {
+                        const a = document.createElement('a');
+                        a.href = `/plot/?id=${line}`;
+                        a.target = '_blank';
+                        a.textContent = line;
+                        a.style.display = 'block';
+                        document.body.appendChild(a);
+                    }
+                } catch (error) {
+                    alert('Failed to fetch index.txt');
+                    console.error(error);
+                }
+            };
+            const url = new URL(window.location.href);
+            const id = url.searchParams.get('id');
+            if (!id) f();
+        </script>
+    </body>
+</html>
