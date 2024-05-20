@@ -2,7 +2,7 @@ const loadData = async () => {
     const url = new URL(window.location.href);
     const id = url.searchParams.get('id');
     if (!id) return undefined;
-    return await d3.csv(`/plot/data/usage-stats-${id}.csv`);
+    return await d3.csv(`/simulator/plot/data/usage-stats-${id}.csv`);
 };
 
 const MAX_LOAD = 100;

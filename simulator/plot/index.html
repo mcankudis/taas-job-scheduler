@@ -23,12 +23,12 @@
         <script>
             const f = async () => {
                 try {
-                    const index = await fetch('/plot/data/index.txt');
+                    const index = await fetch('/simulator/plot/data/index.txt');
                     const text = await index.text();
                     const lines = text.split('\n');
                     for (const line of lines) {
                         const a = document.createElement('a');
-                        a.href = `/plot/?id=${line}`;
+                        a.href = `/simulator/plot/?id=${line}`;
                         a.target = '_blank';
                         a.textContent = line;
                         a.style.display = 'block';
