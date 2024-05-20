@@ -11,12 +11,13 @@ import jakarta.inject.Inject;
 import org.mcankudis.cluster_resources.ClusterResources;
 import org.mcankudis.cluster_resources.ClusterResourcesImplSimulator;
 import org.mcankudis.cluster_service.ClusterServiceImplSimulator;
-import org.mcankudis.config.ConfigSimulator;
 import org.mcankudis.job.Job;
 import org.mcankudis.job.repository.JobRepositoryImplSimulator;
+import org.mcankudis.scheduler_config.SchedulerConfig;
+import org.mcankudis.scheduler_config.SchedulerConfigImplSimulator;
 import org.mcankudis.scheduling_strategy.SchedulingStrategy;
-import org.mcankudis.scheduling_strategy.SchedulingStrategyImplNoStrategy;
-import org.mcankudis.scheduling_strategy.SchedulingStrategyImplPHI;
+import org.mcankudis.scheduling_strategy.SchedulingStrategyFactory;
+import org.mcankudis.scheduling_strategy.SchedulingStrategyFactory.Strategy;
 
 @ApplicationScoped
 public class SchedulerService {
@@ -26,12 +27,13 @@ public class SchedulerService {
     @Inject
     private JobRepositoryImplSimulator jobRepository;
 
+    private SchedulerConfig config = new SchedulerConfigImplSimulator();
+
     private ClusterResources clusterResources;
 
-    // private SchedulingStrategy strategy = new SchedulingStrategyPHI();
-    private SchedulingStrategy strategy = new SchedulingStrategyImplNoStrategy();
+    private SchedulingStrategy strategy = SchedulingStrategyFactory.getSchedulingStrategy(Strategy.NEXT_POSSIBLE_FIRST);
 
-    @Scheduled(every = ConfigSimulator.TICK_INTERVAL_IN_S + "s")
+    @Scheduled(every = SchedulerConfigImplSimulator.TICK_INTERVAL_IN_S + "s")
     void schedulerTick() {
         System.out.println("Scheduler tick");
 
@@ -40,11 +42,11 @@ public class SchedulerService {
             return;
         }
 
-        LocalDateTime window = LocalDateTime.now().plusSeconds(ConfigSimulator.WINDOW_SIZE_IN_S);
+        LocalDateTime window = LocalDateTime.now().plusSeconds(config.getWindowSizeInSeconds());
 
         List<Job> jobs = this.jobRepository.findJobsAbleToStartBefore(window);
 
-        List<Job> jobsToStart = this.strategy.getJobsToStart(jobs, this.clusterResources);
+        List<Job> jobsToStart = this.strategy.getJobsToStart(jobs, this.clusterResources, this.config);
 
         if (jobsToStart.isEmpty()) {
             System.out.println("No job to start");
@@ -66,7 +68,7 @@ public class SchedulerService {
         System.out.format("Load penalty %d", loadPenalty);
     }
 
-    @Scheduled(every = ConfigSimulator.TICK_INTERVAL_IN_S / 2 + "s")
+    @Scheduled(every = SchedulerConfigImplSimulator.TICK_INTERVAL_IN_S / 2 + "s")
     void fetchClusterStatus() {
         try {
             String response = this.clusterService.getClusterStatus();

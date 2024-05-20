@@ -6,12 +6,13 @@ import java.util.List;
 
 import org.mcankudis.cluster_resources.ClusterResources;
 import org.mcankudis.job.Job;
+import org.mcankudis.scheduler_config.SchedulerConfig;
 
 /**
  * This is a no-strategy, which just starts jobs according to their latest due date
  */
 public class SchedulingStrategyImplNoStrategy implements SchedulingStrategy {
-    public List<Job> getJobsToStart(List<? extends Job> jobs, ClusterResources clusterResources) {
+    public List<Job> getJobsToStart(List<? extends Job> jobs, ClusterResources clusterResources, SchedulerConfig config) {
         LocalDateTime now = LocalDateTime.now();
         
         if (jobs.isEmpty()) {

@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.mcankudis.cluster_resources.ClusterResources;
-import org.mcankudis.config.ConfigSimulator;
 import org.mcankudis.job.Job;
+import org.mcankudis.scheduler_config.SchedulerConfig;
 
 /**
  * This strategy calculates a "PHI" value for each job, based on its resource usage, the current
@@ -15,8 +15,12 @@ import org.mcankudis.job.Job;
  * window. The PHI value is then used to determine whether a job can be started in the current tick.
  */
 public class SchedulingStrategyImplPHI implements SchedulingStrategy {
-    public List<Job> getJobsToStart(List<? extends Job> jobs, ClusterResources clusterResources) {
-        LocalDateTime window = LocalDateTime.now().plusSeconds(ConfigSimulator.WINDOW_SIZE_IN_S);
+    private SchedulerConfig config;
+    
+    public List<Job> getJobsToStart(List<? extends Job> jobs, ClusterResources clusterResources, SchedulerConfig config) {
+        this.config = config;
+
+        LocalDateTime window = LocalDateTime.now().plusSeconds(config.getWindowSizeInSeconds());
 
         for (Job job : jobs) {
             System.out.println("    Job: " + job);
@@ -32,12 +36,12 @@ public class SchedulingStrategyImplPHI implements SchedulingStrategy {
 
         System.out.println("Calculated total resource usage: " + total);
 
-        int tickLoadAVG = total / ConfigSimulator.TICKS_PER_WINDOW;
+        int tickLoadAVG = total / config.getTicksPerWindow();
 
         // todo: use multiple smaller windows to mitigate job clusters skewing the average for the whole window
 
         System.out.println(
-                "Calculated average load per tick in the next " + ConfigSimulator.WINDOW_SIZE_IN_S
+                "Calculated average load per tick in the next " + config.getWindowSizeInSeconds()
                         + " seconds: " + tickLoadAVG);
 
         List<Job> jobsUnderPHI = new ArrayList<>();
@@ -50,7 +54,7 @@ public class SchedulingStrategyImplPHI implements SchedulingStrategy {
             System.out.println("Job could be started, calculating PHI: " + job + " ");
 
             int jobLoad = job.getClusterResources().getValue();
-            int jobPHI = job.calculatePHI(tickLoadAVG, ConfigSimulator.MAX_NODES, currentLoad);
+            int jobPHI = job.calculatePHI(tickLoadAVG, config.getMaxNodes(), currentLoad);
 
             // todo: for vw, when max exec time arrives, job needs to be executed regardless of PHI
             boolean canStart = currentLoad + jobLoad <= jobPHI;
@@ -128,7 +132,7 @@ public class SchedulingStrategyImplPHI implements SchedulingStrategy {
                     }
 
                     int jobTimeLimit = job.getExecutionTimeLimitInMs();
-                    int expectedJobTicks = (int) Math.ceil(jobTimeLimit / 1000.0 / ConfigSimulator.TICK_INTERVAL_IN_S);
+                    int expectedJobTicks = (int) Math.ceil(jobTimeLimit / 1000.0 / config.getTickIntervalInSeconds());
 
                     return (int) Math
                             .round(job.getClusterResources().getValue()
