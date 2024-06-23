@@ -22,12 +22,12 @@ public class JobRepositoryImplSimulator implements JobRepository {
     private SimulatorJobService jobService;
 
     public List<Job> findJobsAbleToStartBefore(LocalDateTime time) {
-        System.out.println("Finding jobs able to start before: " + time);
         try {
             String response = this.jobService.getJobsAbleToStartBefore(time);
 
             ObjectMapper mapper = new ObjectMapper();
 
+            // todo switch to using timestamps
             DateTimeFormatter formatter = DateTimeFormatter
                     .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
                     .withZone(ZoneId.of("Europe/Berlin"));
@@ -38,8 +38,6 @@ public class JobRepositoryImplSimulator implements JobRepository {
             ArrayList<Job> availableJobs = new ArrayList<>();
 
             for (JobFromSimulatorJobServiceDTO jobFromService : jobsFromService) {
-                System.out.println("Job from service: " + jobFromService);
-
                 Job job = new JobImplSimulator(jobFromService.id, jobFromService.name,
                         jobFromService.getRequiredResources(),
                         LocalDateTime.parse(jobFromService.nextExecutionOptimalStart, formatter),

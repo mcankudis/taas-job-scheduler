@@ -2,6 +2,7 @@ package org.mcankudis.scheduling_strategy;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,39 +11,50 @@ import org.mcankudis.job.Job;
 import org.mcankudis.scheduler_config.SchedulerConfig;
 
 /**
- * This strategy calculates a "PHI" value for each job, based on its resource usage, the current
- * load, time until the job's latest start time, and the expected average load in the next time
- * window. The PHI value is then used to determine whether a job can be started in the current tick.
+ * This strategy calculates a "PHI" value for each job, based on its resource
+ * usage, the current
+ * load, time until the job's latest start time, and the expected average load
+ * in the next time
+ * window. The PHI value is then used to determine whether a job can be started
+ * in the current tick.
  */
 public class SchedulingStrategyImplPHI implements SchedulingStrategy {
     private SchedulerConfig config;
-    
-    public List<Job> getJobsToStart(List<? extends Job> jobs, ClusterResources clusterResources, SchedulerConfig config) {
+
+    public List<Job> getJobsToStart(List<? extends Job> jobs, ClusterResources clusterResources,
+            SchedulerConfig config) {
         this.config = config;
 
-        LocalDateTime window = LocalDateTime.now().plusSeconds(config.getWindowSizeInSeconds());
-
-        for (Job job : jobs) {
-            System.out.println("    Job: " + job);
-        }
+        LocalDateTime now = LocalDateTime.now();
 
         if (jobs.isEmpty()) {
             return List.of();
         }
 
+        int biggestTickLoadAVG = 0;
         int currentLoad = clusterResources.getValue();
-        
-        int total = calculateTotalResourceUsageOverTime(jobs, window) + currentLoad;
 
-        System.out.println("Calculated total resource usage: " + total);
+        int smallWindowsToAnalyze = 4;
+        int smallWindowSize = config.getWindowSizeInSeconds() / smallWindowsToAnalyze;
+        int smallWindowTicks = config.getTicksPerWindow() / smallWindowsToAnalyze;
+        DateTimeFormatter formatter = config.getLogDateTimeFormatter();
 
-        int tickLoadAVG = total / config.getTicksPerWindow();
+        for (int i = 1; i <= smallWindowsToAnalyze; i++) {
+            LocalDateTime start = now;
+            LocalDateTime end = start.plusSeconds(smallWindowSize * i);
 
-        // todo: use multiple smaller windows to mitigate job clusters skewing the average for the whole window
+            int windowTotalLoad = calculateTotalResourceUsageInWindow(jobs, now, end) + currentLoad;
 
-        System.out.println(
-                "Calculated average load per tick in the next " + config.getWindowSizeInSeconds()
-                        + " seconds: " + tickLoadAVG);
+            int ticksInConsideredWindows = smallWindowTicks * i;
+            int windowTickLoadAVG = windowTotalLoad / ticksInConsideredWindows;
+
+            System.out.println(start.format(formatter) + " - " + end.format(formatter) + " | " + "load: "
+                    + windowTotalLoad + " avg: " + windowTickLoadAVG);
+
+            if (windowTickLoadAVG > biggestTickLoadAVG) {
+                biggestTickLoadAVG = windowTickLoadAVG;
+            }
+        }
 
         List<Job> jobsUnderPHI = new ArrayList<>();
 
@@ -54,13 +66,10 @@ public class SchedulingStrategyImplPHI implements SchedulingStrategy {
             System.out.println("Job could be started, calculating PHI: " + job + " ");
 
             int jobLoad = job.getClusterResources().getValue();
-            int jobPHI = job.calculatePHI(tickLoadAVG, config.getMaxNodes(), currentLoad);
+            int jobPHI = job.calculatePHI(biggestTickLoadAVG, config.getMaxNodes(), currentLoad);
 
             // todo: for vw, when max exec time arrives, job needs to be executed regardless of PHI
             boolean canStart = currentLoad + jobLoad <= jobPHI;
-
-            System.out.println("Current load=" + currentLoad + ", job load=" + jobLoad
-                    + ", job PHI=" + jobPHI + ", condition=" + canStart);
 
             if (canStart) {
                 jobsUnderPHI.add(job);
@@ -77,68 +86,60 @@ public class SchedulingStrategyImplPHI implements SchedulingStrategy {
         Job firstJob = jobsUnderPHI.removeFirst();
 
         return List.of(firstJob);
-
-        // multiple jobs can be started in the same tick, as long as they fit into the threshold
-        // however, the calculation of the threshold must be improved for that 
-        // for now, starting one job per scheduler tick produces decent results
-
-        /*
-        List<Job> jobsToExecute = new ArrayList<>(List.of(firstJob));
-
-        int firstJobLoad = firstJob.getClusterResources().getValue();
-
-        int threshold = (int) Math
-            .round(tickLoadAVG + ((ConfigLocal.MAX_NODES - tickLoadAVG) * 0.2));
-
-        if(threshold > ConfigLocal.MAX_NODES) threshold = ConfigLocal.MAX_NODES;
-
-        int simulatedLoad = currentLoad + firstJobLoad;
-
-        but we can also execute jobs with later latest start times in this tick, provided they
-        fit into a "soft" threshold. If not, they will be handled in the next ticks.
-        while (simulatedLoad < threshold) {
-            System.out.println(String.format("simulatedLoad: %d, threshold: %d", simulatedLoad, threshold));
-            if (jobsUnderPHI.isEmpty()) {
-                break;
-            }
-
-            Job job = jobsUnderPHI.removeFirst();
-            int jobLoad = job.getClusterResources().simpleValue();
-
-            if (simulatedLoad + jobLoad <= threshold) {
-                jobsToExecute.add(job);
-                simulatedLoad += jobLoad;
-            }
-        }
-
-        return jobsToExecute;
-        */
     }
 
-    private int calculateTotalResourceUsageOverTime(List<? extends Job> jobs, LocalDateTime windowEnd) {
+    private int calculateTotalResourceUsageInWindow(List<? extends Job> jobs, LocalDateTime windowStart,
+            LocalDateTime windowEnd) {
         return jobs.stream()
-                .mapToInt(job -> {
-                    double jobWindowPercentageBeforeWindowEnd = 1;
-
-                    if (windowEnd.isBefore(job.getLatestStartTime())) {
-                        Long fullJobWindow = Duration
-                                .between(job.getEarliestStartTime(), job.getLatestStartTime()).abs()
-                                .toSeconds();
-                        Long toWindowEnd = Duration.between(LocalDateTime.now(), windowEnd).abs()
-                                .toSeconds();
-
-                        jobWindowPercentageBeforeWindowEnd = (double) toWindowEnd / fullJobWindow;
-
-                    }
-
-                    int jobTimeLimit = job.getExecutionTimeLimitInMs();
-                    int expectedJobTicks = (int) Math.ceil(jobTimeLimit / 1000.0 / config.getTickIntervalInSeconds());
-
-                    return (int) Math
-                            .round(job.getClusterResources().getValue()
-                                    * jobWindowPercentageBeforeWindowEnd
-                                    * expectedJobTicks);
-                })
+                .mapToInt(job -> calculateJobResourceUsageInWindow(job, windowStart, windowEnd))
                 .sum();
+    }
+
+    private int calculateJobResourceUsageInWindow(Job job, LocalDateTime windowStart, LocalDateTime windowEnd) {
+        double jobWindowPercentageInWindow = this.calculateWindowOverlap(
+                windowStart,
+                windowEnd,
+                job.getEarliestStartTime(),
+                job.getLatestStartTime());
+
+        int jobTimeLimit = job.getExecutionTimeLimitInMs();
+        int expectedJobTicks = (int) Math.ceil(jobTimeLimit / 1000.0 / config.getTickIntervalInSeconds());
+
+        return (int) Math
+                .round(job.getClusterResources().getValue()
+                        * jobWindowPercentageInWindow
+                        * expectedJobTicks);
+    }
+
+    /**
+     * Calculates how much of the second window is contained in the first window
+     * 
+     * @return a value between 0 and 1, where 0 means no overlap and 1 means the
+     *         second window is fully contained in the first window
+     */
+    private double calculateWindowOverlap(LocalDateTime window1Start, LocalDateTime window1End,
+            LocalDateTime window2Start, LocalDateTime window2End) {
+        if (window1Start.isAfter(window2End) || window1End.isBefore(window2Start)) {
+            return 0;
+        }
+
+        if (window2Start.isAfter(window1Start) && window2End.isBefore(window1End)) {
+            return 1;
+        }
+
+        Duration window2Duration = Duration.between(window2Start, window2End);
+        Duration overlapDuration;
+
+        if (window2End.isAfter(window1End)) {
+            // window1: |------|
+            // window2:     |------|
+            overlapDuration = Duration.between(window2Start, window1End);
+        } else {
+            // window1:     |------|
+            // window2: |------|
+            overlapDuration = Duration.between(window1Start, window2End);
+        }
+
+        return (double) overlapDuration.toSeconds() / (double) window2Duration.toSeconds();
     }
 }

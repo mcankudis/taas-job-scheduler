@@ -3,7 +3,6 @@ package org.mcankudis;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.List;
-
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -31,7 +30,7 @@ public class SchedulerService {
 
     private ClusterResources clusterResources;
 
-    private SchedulingStrategy strategy = SchedulingStrategyFactory.getSchedulingStrategy(Strategy.NEXT_POSSIBLE_FIRST);
+    private SchedulingStrategy strategy = SchedulingStrategyFactory.getSchedulingStrategy(Strategy.PHI);
 
     @Scheduled(every = SchedulerConfigImplSimulator.TICK_INTERVAL_IN_S + "s")
     void schedulerTick() {

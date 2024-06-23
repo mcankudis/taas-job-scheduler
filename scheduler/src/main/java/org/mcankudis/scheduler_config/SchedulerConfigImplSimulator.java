@@ -1,5 +1,8 @@
 package org.mcankudis.scheduler_config;
 
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+
 public class SchedulerConfigImplSimulator implements SchedulerConfig {
     // must be public in order to be used in @Scheduled annotations
     public static final int TICK_INTERVAL_IN_S = 2;
@@ -22,5 +25,11 @@ public class SchedulerConfigImplSimulator implements SchedulerConfig {
 
     public int getTicksPerWindow() {
         return TICKS_PER_WINDOW;
+    }
+
+    public DateTimeFormatter getLogDateTimeFormatter() {
+        return DateTimeFormatter
+                .ofPattern("HH:mm:ss.SSS")
+                .withZone(ZoneId.of("Europe/Berlin"));
     }
 }
