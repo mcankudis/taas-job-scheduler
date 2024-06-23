@@ -8,6 +8,8 @@ import java.util.List;
 
 import org.mcankudis.job.Job;
 import org.mcankudis.job.JobImplSimulator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -16,6 +18,8 @@ import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class JobRepositoryImplSimulator implements JobRepository {
+    private static final Logger LOG = LoggerFactory.getLogger(JobRepositoryImplSimulator.class);
+    
     private ArrayList<Job> jobs = new ArrayList<>();
 
     @Inject
@@ -49,7 +53,7 @@ public class JobRepositoryImplSimulator implements JobRepository {
 
             this.jobs = availableJobs;
         } catch (Exception e) {
-            System.out.println("Error invoking HTTP service: " + e);
+            LOG.error("Error invoking HTTP service: ", e);
         }
 
         return this.jobs;

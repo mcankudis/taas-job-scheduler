@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.mcankudis.cluster_resources.ClusterResources;
 import org.mcankudis.job.Job;
@@ -20,6 +22,8 @@ import org.mcankudis.scheduler_config.SchedulerConfig;
  */
 public class SchedulingStrategyImplPHI implements SchedulingStrategy {
     private SchedulerConfig config;
+
+    private static final Logger LOG = LoggerFactory.getLogger(SchedulingStrategyImplPHI.class);
 
     public List<Job> getJobsToStart(List<? extends Job> jobs, ClusterResources clusterResources,
             SchedulerConfig config) {
@@ -48,8 +52,8 @@ public class SchedulingStrategyImplPHI implements SchedulingStrategy {
             int ticksInConsideredWindows = smallWindowTicks * i;
             int windowTickLoadAVG = windowTotalLoad / ticksInConsideredWindows;
 
-            System.out.println(start.format(formatter) + " - " + end.format(formatter) + " | " + "load: "
-                    + windowTotalLoad + " avg: " + windowTickLoadAVG);
+
+            LOG.debug("{} - {} | load: {} avg: {}", start.format(formatter), end.format(formatter), windowTotalLoad, windowTickLoadAVG);
 
             if (windowTickLoadAVG > biggestTickLoadAVG) {
                 biggestTickLoadAVG = windowTickLoadAVG;
@@ -63,7 +67,7 @@ public class SchedulingStrategyImplPHI implements SchedulingStrategy {
                 continue;
             }
 
-            System.out.println("Job could be started, calculating PHI: " + job + " ");
+            LOG.debug("Job could be started, calculating PHI: {}", job);
 
             int jobLoad = job.getClusterResources().getValue();
             int jobPHI = job.calculatePHI(biggestTickLoadAVG, config.getMaxNodes(), currentLoad);

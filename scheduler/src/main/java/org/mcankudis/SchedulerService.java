@@ -1,6 +1,5 @@
 package org.mcankudis;
 
-import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.List;
 import io.quarkus.scheduler.Scheduled;
@@ -17,6 +16,8 @@ import org.mcankudis.scheduler_config.SchedulerConfigImplSimulator;
 import org.mcankudis.scheduling_strategy.SchedulingStrategy;
 import org.mcankudis.scheduling_strategy.SchedulingStrategyFactory;
 import org.mcankudis.scheduling_strategy.SchedulingStrategyFactory.Strategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
 public class SchedulerService {
@@ -28,16 +29,18 @@ public class SchedulerService {
 
     private SchedulerConfig config = new SchedulerConfigImplSimulator();
 
+    private static final Logger LOG = LoggerFactory.getLogger(SchedulerService.class);
+
     private ClusterResources clusterResources;
 
     private SchedulingStrategy strategy = SchedulingStrategyFactory.getSchedulingStrategy(Strategy.PHI);
 
     @Scheduled(every = SchedulerConfigImplSimulator.TICK_INTERVAL_IN_S + "s")
     void schedulerTick() {
-        System.out.println("Scheduler tick");
+        LOG.info("Scheduler tick" );
 
         if (this.clusterResources == null) {
-            System.out.println("Cluster resources not available yet");
+            LOG.info("Cluster resources not available yet");
             return;
         }
 
@@ -48,17 +51,17 @@ public class SchedulerService {
         List<Job> jobsToStart = this.strategy.getJobsToStart(jobs, this.clusterResources, this.config);
 
         if (jobsToStart.isEmpty()) {
-            System.out.println("No job to start");
+            LOG.info("No job to start");
             return;
         }
 
         for (Job job : jobsToStart) {
             try {
-                System.out.println("Requesting to start job: " + job.getId());
+                LOG.info("Requesting to start job: {}", job.getId());
 
                 job.trigger(this.clusterService);
             } catch (Exception e) {
-                System.out.println(MessageFormat.format("Error invoking HTTP service: {0}", e));
+                LOG.error("Error invoking HTTP service", e);
             }
         }
 
@@ -74,9 +77,9 @@ public class SchedulerService {
 
             this.clusterResources = new ClusterResourcesImplSimulator(response);
 
-            System.out.println("Cluster state: " + this.clusterResources);
+            LOG.info("Cluster state: {}", this.clusterResources);
         } catch (Exception e) {
-            System.out.println(MessageFormat.format("Error fetching cluster status: {0}", e));
+            LOG.error("Error fetching cluster status", e);
         }
     }
 }

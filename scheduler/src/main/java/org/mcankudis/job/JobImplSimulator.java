@@ -6,8 +6,11 @@ import java.time.LocalDateTime;
 
 import org.mcankudis.cluster_resources.ClusterResources;
 import org.mcankudis.cluster_service.ClusterService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JobImplSimulator implements Job {
+    private static final Logger LOG = LoggerFactory.getLogger(JobImplSimulator.class);
 
     private String id;
     private String name;
@@ -91,13 +94,13 @@ public class JobImplSimulator implements Job {
         }
 
         int phi = this.clusterResources.getValue();
-        System.out.print("Calculating job PHI. Starting PHI: " + phi);
+        LOG.debug("Calculating job PHI. Starting PHI: {}", phi);
 
         // if the current load is below the expected average, increase the phi accordingly
         // - "oversaving" early will likely lead to overloads leater, so we want to avoid that
         if (currentClusterLoad < tickLoadAVG) {
             int modifier = (tickLoadAVG - currentClusterLoad) / 2;
-            System.out.print(" => Low load, increasing phi by " + modifier);
+            LOG.debug(" => Low load, increasing phi by {}", modifier);
             phi += modifier;
         }
 
@@ -110,10 +113,10 @@ public class JobImplSimulator implements Job {
             int total = theoreticallyFreeResources * timeModifier / maxExecutionTimeInS;
             phi += total;
 
-            System.out.print(" => Deadline approaching (in " + timeToDeadline + "), increasing phi by " + total);
+            LOG.debug(" => Deadline approaching (in {}), increasing phi by {}", timeToDeadline, total);
         }
 
-        System.out.println(" => Final PHI: " + phi);
+        LOG.debug(" => Final PHI: {}", phi);
 
         return phi > maxNodes ? maxNodes : phi;
     }
@@ -121,13 +124,13 @@ public class JobImplSimulator implements Job {
     public void trigger(ClusterService clusterService) {
         // todo wait for response and act accordingly - only relevant in the standalone version
         try {
-            System.out.println("Requesting to start job: " + this.id);
+            LOG.info("Requesting to start job: {}", this.id);
 
             clusterService.startJob(this.toRequestBody());
 
-            System.out.println("Job triggered");
+            LOG.info("Job triggered");
         } catch (Exception e) {
-            System.out.println(MessageFormat.format("Error invoking HTTP service: {0}", e));
+            LOG.error(MessageFormat.format("Error invoking HTTP service: {0}", e));
             // todo further handling
         }
     }
