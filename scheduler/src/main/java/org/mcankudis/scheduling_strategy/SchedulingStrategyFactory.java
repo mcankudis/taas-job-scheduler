@@ -1,7 +1,7 @@
 package org.mcankudis.scheduling_strategy;
 
 public class SchedulingStrategyFactory {
-    public enum Strategy {
+    public enum StrategyId {
         PHI,
         NEXT_POSSIBLE_FIRST,
         NO_STRATEGY
@@ -10,8 +10,8 @@ public class SchedulingStrategyFactory {
     private SchedulingStrategyFactory() {
     }
 
-    public static SchedulingStrategy getSchedulingStrategy(Strategy strategy) {
-        switch (strategy) {
+    public static SchedulingStrategy getSchedulingStrategy(StrategyId strategyId) {
+        switch (strategyId) {
             case PHI:
                 return new SchedulingStrategyImplPHI();
             case NEXT_POSSIBLE_FIRST:
@@ -19,7 +19,7 @@ public class SchedulingStrategyFactory {
             case NO_STRATEGY:
                 return new SchedulingStrategyImplNoStrategy();
             default:
-                throw new IllegalArgumentException("Unknown strategy: " + strategy);
+                throw new IllegalArgumentException("Unknown strategy: " + strategyId);
         }
     }
 }

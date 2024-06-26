@@ -15,7 +15,7 @@ import org.mcankudis.scheduler_config.SchedulerConfig;
 import org.mcankudis.scheduler_config.SchedulerConfigImplSimulator;
 import org.mcankudis.scheduling_strategy.SchedulingStrategy;
 import org.mcankudis.scheduling_strategy.SchedulingStrategyFactory;
-import org.mcankudis.scheduling_strategy.SchedulingStrategyFactory.Strategy;
+import org.mcankudis.scheduling_strategy.SchedulingStrategyFactory.StrategyId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,7 @@ public class SchedulerService {
 
     private ClusterResources clusterResources;
 
-    private SchedulingStrategy strategy = SchedulingStrategyFactory.getSchedulingStrategy(Strategy.PHI);
+    private SchedulingStrategy strategy = SchedulingStrategyFactory.getSchedulingStrategy(StrategyId.PHI);
 
     @Scheduled(every = SchedulerConfigImplSimulator.TICK_INTERVAL_IN_S + "s")
     void schedulerTick() {
